@@ -17,7 +17,7 @@ ThreadPool::Worker::Worker(ThreadPool *pool) : pool{pool} {
         }
       }
 
-      Job *job = this->pool->jobs_.front();
+      std::unique_ptr<Job> job = std::move(this->pool->jobs_.front());
       this->pool->jobs_.pop();
       this->pool->cv_.notify_all();
 
@@ -44,9 +44,9 @@ ThreadPool::~ThreadPool() {
   cv_.notify_all();
 }
 
-void ThreadPool::Push(Job *job) {
+void ThreadPool::Push(std::unique_ptr<Job> &&job) {
   std::unique_lock<std::mutex> lock;
-  jobs_.push(job);
+  jobs_.push(std::move(job));
   cv_.notify_all();
 }
 

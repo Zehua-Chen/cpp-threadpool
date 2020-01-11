@@ -1,5 +1,6 @@
 add_library(
     threadpool
+    job.cc
     pool.cc)
 
 target_include_directories(

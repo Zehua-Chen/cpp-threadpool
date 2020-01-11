@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <queue>
 #include <thread>
 
@@ -11,11 +12,11 @@ class ThreadPool {
   ThreadPool(size_t threads);
   ~ThreadPool();
 
-  void Push(Job *job);
+  void Push(std::unique_ptr<Job> &&job);
   void Wait();
 
  private:
-  std::queue<Job *> jobs_;
+  std::queue<std::unique_ptr<Job>> jobs_;
   bool running_ = true;
   std::mutex m_;
   std::condition_variable cv_;
