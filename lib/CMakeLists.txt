@@ -12,3 +12,10 @@ target_compile_features(
     threadpool
     PUBLIC
       cxx_std_17)
+
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug" AND NOT ${WIN32})
+    target_compile_options(
+        threadpool
+        PUBLIC
+          "-fsanitize=thread")
+endif()

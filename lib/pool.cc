@@ -1,10 +1,12 @@
 #include "threadpool/pool.h"
 
+#include <algorithm>
+
 namespace threadpool {
 ThreadPool::Worker::Worker(Worker &&other)
     : pool{other.pool}, thread{std::move(other.thread)} {}
 
-ThreadPool::Worker::Worker(ThreadPool *pool) : pool{pool} {
+ThreadPool::Worker::Worker(ThreadPool *pool) : pool{pool}, busy{false} {
   std::thread actual_thread([this]() {
     while (this->pool->running_) {
       std::unique_lock<std::mutex> lock{this->pool->m_};
@@ -17,12 +19,16 @@ ThreadPool::Worker::Worker(ThreadPool *pool) : pool{pool} {
         }
       }
 
+      this->busy.store(true);
+
       std::unique_ptr<Job> job = std::move(this->pool->jobs_.front());
       this->pool->jobs_.pop();
       this->pool->cv_.notify_all();
 
       lock.unlock();
       job->Execute();
+
+      this->busy.store(false);
     }
   });
 
@@ -40,20 +46,25 @@ ThreadPool::ThreadPool(size_t threads) {
 }
 
 ThreadPool::~ThreadPool() {
+  std::unique_lock<std::mutex> lock{m_};
   running_ = false;
   cv_.notify_all();
+  m_.unlock();
 }
 
 void ThreadPool::Push(std::unique_ptr<Job> &&job) {
-  std::unique_lock<std::mutex> lock;
+  std::unique_lock<std::mutex> lock{m_};
   jobs_.push(std::move(job));
   cv_.notify_all();
 }
 
 void ThreadPool::Wait() {
   std::unique_lock<std::mutex> lock{m_};
+  const auto predicate = [](const Worker &worker) {
+    return worker.busy.load();
+  };
 
-  while (jobs_.size() != 0) {
+  while (std::any_of(workers_.begin(), workers_.end(), predicate)) {
     cv_.wait(lock);
   }
 }

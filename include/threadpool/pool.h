@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <queue>
 #include <thread>
@@ -24,6 +25,7 @@ class ThreadPool {
   struct Worker {
     ThreadPool *pool;
     std::thread thread;
+    std::atomic<bool> busy;
 
     Worker(Worker &&other);
     Worker(ThreadPool *pool);
