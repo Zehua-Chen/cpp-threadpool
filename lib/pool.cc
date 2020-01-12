@@ -49,7 +49,6 @@ ThreadPool::~ThreadPool() {
   std::unique_lock<std::mutex> lock{m_};
   running_ = false;
   cv_.notify_all();
-  m_.unlock();
 }
 
 void ThreadPool::Push(std::unique_ptr<Job> &&job) {
