@@ -3,19 +3,25 @@
 #include <algorithm>
 
 namespace threadpool {
-size_t ThreadPool::JobQueue::size() { return data_.size(); }
-
 std::unique_ptr<Job> ThreadPool::JobQueue::Pop() {
   std::unique_lock<std::mutex> lock{m_};
 
+  if (data_.size() == 0) {
+    return std::unique_ptr<Job>{};
+  }
+
   while (data_.size() < 1) {
     cv_.wait(lock);
+
+    if (data_.size() == 0) {
+      return std::unique_ptr<Job>{};
+    }
   }
 
   std::unique_ptr<Job> job = std::move(data_.front());
   data_.pop();
 
-  cv_.notify_all();
+  cv_.notify_one();
 
   return job;
 }
@@ -24,6 +30,10 @@ void ThreadPool::JobQueue::Push(std::unique_ptr<Job> &&job) {
   std::unique_lock<std::mutex> lock{m_};
 
   data_.push(std::move(job));
+  cv_.notify_one();
+}
+
+void ThreadPool::JobQueue::Close() {
   cv_.notify_all();
 }
 
@@ -34,18 +44,16 @@ ThreadPool::Worker::Worker(Worker &&other)
 
 ThreadPool::Worker::Worker(ThreadPool *pool) : pool_{pool} {
   std::thread actual_thread([this]() {
-    while (true) {
+    while (this->pool_->open_) {
       std::unique_ptr<Job> job = this->pool_->queue_.Pop();
+
+      // Close the worker without running the job
+      if (!this->pool_->open_) {
+        break;
+      }
 
       if (job) {
         job->Execute();
-      }
-
-      // must check the size of the queue before existing, as a job
-      // might add new job to the queue
-      if (this->pool_->queue_.size() == 0 && !this->pool_->open_) {
-        this->pool_->threads_.fetch_add(1);
-        return;
       }
     }
   });
@@ -65,10 +73,7 @@ ThreadPool::ThreadPool(size_t threads) : threads_(threads) {
 
 ThreadPool::~ThreadPool() {
   open_ = false;
-
-  for (size_t i = 0; i < threads_; ++i) {
-    this->Push(std::unique_ptr<Job>{});
-  }
+  queue_.Close();
 }
 
 void ThreadPool::Push(std::unique_ptr<Job> &&job) {

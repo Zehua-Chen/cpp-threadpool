@@ -9,7 +9,23 @@ using std::unique_ptr;
 
 std::mutex cout_m;
 
-int main() {
+void TestEmpty() {
+  cout << endl << "test empty" << endl;
+  ThreadPool pool{3};
+}
+
+void TestPushOne() {
+  cout << endl << "test push one" << endl;
+  ThreadPool pool{3};
+
+  pool.Push(Task([]() {
+    std::unique_lock<std::mutex> lock{cout_m};
+    cout << "only task" << endl;
+  }));
+}
+
+void TestPushComplex() {
+  cout << endl << "test push complex" << endl;
   ThreadPool pool{3};
 
   for (size_t i = 0; i < 100; i++) {
@@ -39,6 +55,12 @@ int main() {
   // }));
 
   // pool.Wait();
+}
+
+int main() {
+  TestEmpty();
+  TestPushOne();
+  TestPushComplex();
 
   std::unique_lock<std::mutex> lock{cout_m};
   cout << "all job done executing" << endl;
