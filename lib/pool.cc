@@ -2,23 +2,25 @@
 
 #include <algorithm>
 
+using std::unique_ptr;
+
 namespace threadpool {
-std::unique_ptr<Job> ThreadPool::JobQueue::Pop() {
+unique_ptr<Job> ThreadPool::JobQueue::Pop() {
   std::unique_lock<std::mutex> lock{m_};
 
   if (data_.size() == 0) {
-    return std::unique_ptr<Job>{};
+    return unique_ptr<Job>{};
   }
 
   while (data_.size() < 1) {
     cv_.wait(lock);
 
     if (data_.size() == 0) {
-      return std::unique_ptr<Job>{};
+      return unique_ptr<Job>{};
     }
   }
 
-  std::unique_ptr<Job> job = std::move(data_.front());
+  unique_ptr<Job> job = std::move(data_.front());
   data_.pop();
 
   cv_.notify_one();
@@ -26,16 +28,14 @@ std::unique_ptr<Job> ThreadPool::JobQueue::Pop() {
   return job;
 }
 
-void ThreadPool::JobQueue::Push(std::unique_ptr<Job> &&job) {
+void ThreadPool::JobQueue::Push(unique_ptr<Job> &&job) {
   std::unique_lock<std::mutex> lock{m_};
 
   data_.push(std::move(job));
   cv_.notify_one();
 }
 
-void ThreadPool::JobQueue::Close() {
-  cv_.notify_all();
-}
+void ThreadPool::JobQueue::Close() { cv_.notify_all(); }
 
 ThreadPool::Worker::Worker(Worker &&other)
     : pool_{other.pool_}, thread_{std::move(other.thread_)} {
@@ -45,7 +45,7 @@ ThreadPool::Worker::Worker(Worker &&other)
 ThreadPool::Worker::Worker(ThreadPool *pool) : pool_{pool} {
   std::thread actual_thread([this]() {
     while (this->pool_->open_) {
-      std::unique_ptr<Job> job = this->pool_->queue_.Pop();
+      unique_ptr<Job> job = this->pool_->queue_.Pop();
 
       // Close the worker without running the job
       if (!this->pool_->open_) {
@@ -76,7 +76,17 @@ ThreadPool::~ThreadPool() {
   queue_.Close();
 }
 
-void ThreadPool::Push(std::unique_ptr<Job> &&job) {
-  queue_.Push(std::move(job));
+void ThreadPool::Push(unique_ptr<Job> &&job) { queue_.Push(std::move(job)); }
+
+ThreadPool *ThreadPool::Default() {
+  if (!default_pool_) {
+    unsigned int concurrency = std::thread::hardware_concurrency();
+
+    default_pool_ = unique_ptr<ThreadPool>{new ThreadPool{concurrency - 1}};
+  }
+
+  return default_pool_.get();
 }
+
+unique_ptr<ThreadPool> ThreadPool::default_pool_{};
 }  // namespace threadpool

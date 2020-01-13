@@ -9,14 +9,13 @@
 #include "threadpool/job.h"
 
 namespace threadpool {
-/*
+/**
  * @brief A threadpool object
  */
 class ThreadPool {
  public:
   /**
-   * @brief create a thread pool
-   * Create a thread pool
+   * @brief Create a thread pool
    *
    * @param threads how many threads to use
    */
@@ -25,18 +24,23 @@ class ThreadPool {
 
   /**
    * @brief Push a new job onto the thread pool
-   * Push a new job onto the thread pool
    *
    * @param job a job to be run. Note that the ownership of the job will be
    * trasfered over to the thread pool. The job can be null
    */
   void Push(std::unique_ptr<Job> &&job);
 
+  /**
+   * @brief Get the default thread pool
+   *
+   * @returns Returns a thread pool with # of threads =
+   * `std::thread::hardware_concurrency() - 1`
+   */
+  static ThreadPool *Default();
+
  private:
   /**
-   * @brief A queue of jobs
-   *
-   * A thread safe implementation of a queue of jobs
+   * @brief A thread safe implementation of a queue of jobs
    */
   class JobQueue {
    private:
@@ -46,14 +50,14 @@ class ThreadPool {
 
    public:
     /**
-     * Get the size of the queue
+     * @brief Get the size of the queue
      *
      * @return the size of the queue
      */
     inline size_t size() { return data_.size(); }
 
     /**
-     * Get a job and return it from the queue
+     * @brief Get a job and return it from the queue
      *
      * @returns return a job if there is one; if there are no more jobs,
      * two conditions might occur. 1. a null is returned if `Close()` is called.
@@ -62,7 +66,7 @@ class ThreadPool {
     std::unique_ptr<Job> Pop();
 
     /**
-     * Get a job and return it from the queue
+     * @brief Get a job and return it from the queue
      *
      * @param push a new job onto the queue, with the ownership transferred to
      * the queue
@@ -70,8 +74,8 @@ class ThreadPool {
     void Push(std::unique_ptr<Job> &&job);
 
     /**
-     * Close the queue, would cause `Pop()` to return null if there are no more
-     * jobs available.
+     * @brief Close the queue, would cause `Pop()` to return null if there
+     * are no more jobs available.
      */
     void Close();
   };
@@ -96,5 +100,7 @@ class ThreadPool {
   // put below queue_ so that it is destructed first
   JobQueue queue_;
   std::vector<Worker> workers_;
+
+  static std::unique_ptr<ThreadPool> default_pool_;
 };
 }  // namespace threadpool
