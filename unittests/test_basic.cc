@@ -17,44 +17,52 @@ void TestEmpty() {
 void TestPushOne() {
   cout << endl << "test push one" << endl;
   ThreadPool pool{3};
+  JobGroup group;
 
-  pool.Push(CreateJob([]() {
+  group.Enter();
+
+  pool.Push(CreateJob([&]() {
     std::unique_lock<std::mutex> lock{cout_m};
-    cout << "only task" << endl;
+    cout << "test push one: task 1" << endl;
+    group.Leave();
   }));
+
+  group.Wait();
 }
 
 void TestPushComplex() {
   cout << endl << "test push complex" << endl;
   ThreadPool pool{3};
+  std::shared_ptr<JobGroup> group = std::make_shared<JobGroup>();
 
   for (size_t i = 0; i < 100; i++) {
+    group->Enter();
+
     pool.Push(CreateJob([=]() {
       std::unique_lock<std::mutex> lock{cout_m};
-      cout << "hello from job " << i  << endl;
+      cout << "test push complex: job " << i  << endl;
+
+      group->Leave();
     }));
-    // pool.Wait();
   }
+
+  group->Enter();
 
   pool.Push(CreateJob([&]() {
     std::unique_lock<std::mutex> lock{cout_m};
-    cout << "hello from job b!" << endl;
+    cout << "test push complex: job b" << endl;
 
     pool.Push(CreateJob([&]() {
-      cout << "hello from job d!" << endl;
+      cout << "test push complex: job d" << endl;
 
       pool.Push(CreateJob([&]() {
-        cout << "hello from job e!" << endl;
+        cout << "test push complex: job e" << endl;
+        group->Leave();
       }));
     }));
   }));
 
-  // pool.Push(Task([&]() {
-  //   std::unique_lock<std::mutex> lock{cout_m};
-  //   cout << "hello from job c!" << endl;
-  // }));
-
-  // pool.Wait();
+  group->Wait();
 }
 
 int main() {

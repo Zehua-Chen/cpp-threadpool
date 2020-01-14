@@ -63,7 +63,7 @@ ThreadPool::Worker::Worker(ThreadPool *pool) : pool_{pool} {
 
 ThreadPool::Worker::~Worker() { thread_.join(); }
 
-ThreadPool::ThreadPool(size_t threads) : threads_(threads) {
+ThreadPool::ThreadPool(size_t threads) : threads_(threads), open_(true) {
   workers_.reserve(threads);
 
   for (size_t i = 0; i < threads; ++i) {
