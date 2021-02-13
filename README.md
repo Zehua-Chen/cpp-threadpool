@@ -31,3 +31,11 @@ int main() {
   return 0;
 }
 ```
+
+## Development
+
+```
+cmake -DCPP_THREADPOOL_DEV=1 ..
+```
+
+Defining CPP_THREADPOOL_DEV would enable testing
