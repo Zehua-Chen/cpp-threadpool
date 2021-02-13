@@ -5,6 +5,7 @@
 #include <optional>
 #include <queue>
 #include <thread>
+#include <atomic>
 
 #include "threadpool/job.h"
 
@@ -93,7 +94,7 @@ class thread_pool {
   };
 
   std::atomic<size_t> threads_;
-  bool open_;
+  std::atomic<bool> open_;
 
   // Note: queue_ must be put before workers_
   // workers_ rely on the existance of queue_, therefore, workers_ must be

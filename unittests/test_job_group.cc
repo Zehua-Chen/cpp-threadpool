@@ -56,9 +56,11 @@ void test_push_complex() {
     cout << "test push complex: job b" << endl;
 
     pool.push(create_job([&]() {
+      std::unique_lock<std::mutex> lock{cout_m};
       cout << "test push complex: job d" << endl;
 
       pool.push(create_job([&]() {
+        std::unique_lock<std::mutex> lock{cout_m};
         cout << "test push complex: job e" << endl;
         group->leave();
       }));

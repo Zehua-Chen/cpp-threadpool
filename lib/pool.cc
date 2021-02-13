@@ -48,7 +48,7 @@ thread_pool::worker::worker(thread_pool *pool) : pool_{pool} {
       unique_ptr<job> job = this->pool_->queue_.pop();
 
       // Close the worker without running the job
-      if (!this->pool_->open_) {
+      if (!this->pool_->open_.load()) {
         break;
       }
 
