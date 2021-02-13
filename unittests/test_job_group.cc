@@ -7,6 +7,7 @@ using namespace threadpool;
 using std::cout;
 using std::endl;
 using std::unique_ptr;
+using std::shared_ptr, std::make_shared;
 using std::future;
 using namespace std::literals::chrono_literals;
 
@@ -14,36 +15,37 @@ std::mutex cout_m;
 
 void test_empty() {
   cout << endl << "test empty" << endl;
-  thread_pool pool{3};
+  shared_ptr<thread_pool> pool = make_shared<thread_pool>(3);
 }
 
 void test_push_one() {
   cout << endl << "test push one" << endl;
-  thread_pool pool{3};
-  job_group group;
+  shared_ptr<thread_pool> pool = make_shared<thread_pool>(3);
+  shared_ptr<job_group> group = make_shared<job_group>();
 
-  group.enter();
+  group->enter();
 
-  pool.push(create_job([&]() {
+  pool->push(create_job([=]() {
     std::unique_lock<std::mutex> lock{cout_m};
     cout << "test push one: task 1" << endl;
-    group.leave();
+    group->leave();
   }));
 
-  group.wait();
+  group->wait();
 }
 
 void test_push_complex() {
   cout << endl << "test push complex" << endl;
-  thread_pool pool{3};
-  std::shared_ptr<job_group> group = std::make_shared<job_group>();
+
+  shared_ptr<thread_pool> pool = make_shared<thread_pool>(3);
+  shared_ptr<job_group> group = make_shared<job_group>();
 
   for (size_t i = 0; i < 100; i++) {
     group->enter();
 
-    pool.push(create_job([=]() {
+    pool->push(create_job([=]() {
       std::unique_lock<std::mutex> lock{cout_m};
-      cout << "test push complex: job " << i  << endl;
+      cout << "test push complex: job " << i << endl;
 
       group->leave();
     }));
@@ -51,15 +53,15 @@ void test_push_complex() {
 
   group->enter();
 
-  pool.push(create_job([&]() {
+  pool->push(create_job([=]() {
     std::unique_lock<std::mutex> lock{cout_m};
     cout << "test push complex: job b" << endl;
 
-    pool.push(create_job([&]() {
+    pool->push(create_job([=]() {
       std::unique_lock<std::mutex> lock{cout_m};
       cout << "test push complex: job d" << endl;
 
-      pool.push(create_job([&]() {
+      pool->push(create_job([=]() {
         std::unique_lock<std::mutex> lock{cout_m};
         cout << "test push complex: job e" << endl;
         group->leave();
