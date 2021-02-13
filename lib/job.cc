@@ -1,5 +1,5 @@
 #include "threadpool/job.h"
 
 namespace threadpool {
-Job::~Job() {}
+job::~job() {}
 }  // namespace threadpool

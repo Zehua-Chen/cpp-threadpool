@@ -12,15 +12,15 @@ namespace threadpool {
 /**
  * @brief A threadpool object
  */
-class ThreadPool {
+class thread_pool {
  public:
   /**
    * @brief Create a thread pool
    *
    * @param threads how many threads to use
    */
-  ThreadPool(size_t threads);
-  ~ThreadPool();
+  thread_pool(size_t threads);
+  ~thread_pool();
 
   /**
    * @brief Push a new job onto the thread pool
@@ -28,7 +28,7 @@ class ThreadPool {
    * @param job a job to be run. Note that the ownership of the job will be
    * trasfered over to the thread pool. The job can be null
    */
-  void Push(std::unique_ptr<Job> &&job);
+  void push(std::unique_ptr<job> &&job);
 
   /**
    * @brief Get the default thread pool
@@ -36,15 +36,15 @@ class ThreadPool {
    * @returns Returns a thread pool with # of threads =
    * `std::thread::hardware_concurrency() - 1`
    */
-  static ThreadPool *Default();
+  static thread_pool *shared();
 
  private:
   /**
    * @brief A thread safe implementation of a queue of jobs
    */
-  class JobQueue {
+  class job_queue {
    private:
-    std::queue<std::unique_ptr<Job>> data_;
+    std::queue<std::unique_ptr<job>> data_;
     std::mutex m_;
     std::condition_variable cv_;
 
@@ -63,7 +63,7 @@ class ThreadPool {
      * two conditions might occur. 1. a null is returned if `Close()` is called.
      * 2. block until either `Close()` is called, or a new job is pushed
      */
-    std::unique_ptr<Job> Pop();
+    std::unique_ptr<job> pop();
 
     /**
      * @brief Get a job and return it from the queue
@@ -71,25 +71,25 @@ class ThreadPool {
      * @param push a new job onto the queue, with the ownership transferred to
      * the queue
      */
-    void Push(std::unique_ptr<Job> &&job);
+    void push(std::unique_ptr<job> &&job);
 
     /**
      * @brief Close the queue, would cause `Pop()` to return null if there
      * are no more jobs available.
      */
-    void Close();
+    void close();
   };
 
-  class Worker {
+  class worker {
    private:
-    ThreadPool *pool_;
+    thread_pool *pool_;
     std::thread thread_;
 
    public:
-    Worker(Worker &&other);
-    Worker(ThreadPool *pool);
+    worker(worker &&other);
+    worker(thread_pool *pool);
 
-    ~Worker();
+    ~worker();
   };
 
   std::atomic<size_t> threads_;
@@ -98,9 +98,9 @@ class ThreadPool {
   // Note: queue_ must be put before workers_
   // workers_ rely on the existance of queue_, therefore, workers_ must be
   // put below queue_ so that it is destructed first
-  JobQueue queue_;
-  std::vector<Worker> workers_;
+  job_queue queue_;
+  std::vector<worker> workers_;
 
-  static std::unique_ptr<ThreadPool> default_pool_;
+  static std::unique_ptr<thread_pool> default_pool_;
 };
 }  // namespace threadpool

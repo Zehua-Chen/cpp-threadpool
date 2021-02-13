@@ -1,21 +1,21 @@
 #include "threadpool/job_group.h"
 
 namespace threadpool {
-JobGroup::JobGroup() : count_(0) {}
+job_group::job_group() : count_(0) {}
 
-void JobGroup::Enter() {
+void job_group::enter() {
   std::unique_lock<std::mutex> lock{m_};
   count_ += 1;
   cv_.notify_all();
 }
 
-void JobGroup::Leave() {
+void job_group::leave() {
   std::unique_lock<std::mutex> lock{m_};
   count_ -= 1;
   cv_.notify_all();
 }
 
-void JobGroup::Wait() {
+void job_group::wait() {
   std::unique_lock<std::mutex> lock{m_};
 
   while (count_ != 0) {

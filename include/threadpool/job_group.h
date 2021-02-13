@@ -7,28 +7,28 @@ namespace threadpool {
 /**
  * @brief A way to control a group of jobs
  */
-class JobGroup {
+class job_group {
  public:
   /**
    * @brief Create a new job group
    */
-  JobGroup();
+  job_group();
 
   /**
    * @brief Notify the job group that a job has entered the job group
    */
-  void Enter();
+  void enter();
 
   /**
    * @brief Notify the job group that a job has left the job group
    */
-  void Leave();
+  void leave();
 
   /**
    * @brief Block until all jobs that have entered a job group has left the job
    * group
    */
-  void Wait();
+  void wait();
 
  private:
   int count_;

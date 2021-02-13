@@ -9,67 +9,73 @@ using std::unique_ptr;
 
 std::mutex cout_m;
 
-void TestEmpty() {
+void test_empty() {
   cout << endl << "test empty" << endl;
-  ThreadPool pool{3};
+  thread_pool pool{3};
 }
 
-void TestPushOne() {
+void test_push_one() {
   cout << endl << "test push one" << endl;
-  ThreadPool pool{3};
-  JobGroup group;
+  thread_pool pool{3};
+  job_group group;
 
-  group.Enter();
+  group.enter();
 
-  pool.Push(CreateJob([&]() {
+  pool.push(create_job([&]() {
     std::unique_lock<std::mutex> lock{cout_m};
     cout << "test push one: task 1" << endl;
-    group.Leave();
+    group.leave();
   }));
 
-  group.Wait();
+  group.wait();
 }
 
-void TestPushComplex() {
+void test_push_complex() {
   cout << endl << "test push complex" << endl;
-  ThreadPool pool{3};
-  std::shared_ptr<JobGroup> group = std::make_shared<JobGroup>();
+  thread_pool pool{3};
+  std::shared_ptr<job_group> group = std::make_shared<job_group>();
 
   for (size_t i = 0; i < 100; i++) {
-    group->Enter();
+    group->enter();
 
-    pool.Push(CreateJob([=]() {
+    pool.push(create_job([=]() {
       std::unique_lock<std::mutex> lock{cout_m};
       cout << "test push complex: job " << i  << endl;
 
-      group->Leave();
+      group->leave();
     }));
   }
 
-  group->Enter();
+  group->enter();
 
-  pool.Push(CreateJob([&]() {
+  pool.push(create_job([&]() {
     std::unique_lock<std::mutex> lock{cout_m};
     cout << "test push complex: job b" << endl;
 
-    pool.Push(CreateJob([&]() {
+    pool.push(create_job([&]() {
       cout << "test push complex: job d" << endl;
 
-      pool.Push(CreateJob([&]() {
+      pool.push(create_job([&]() {
         cout << "test push complex: job e" << endl;
-        group->Leave();
+        group->leave();
       }));
     }));
   }));
 
-  group->Wait();
+  group->wait();
+}
+
+void test() {
+  test_empty();
+  test_push_one();
+  test_push_complex();
+
+  std::unique_lock<std::mutex> lock{cout_m};
 }
 
 int main() {
-  TestEmpty();
-  TestPushOne();
-  TestPushComplex();
-
-  std::unique_lock<std::mutex> lock{cout_m};
+  test();
   cout << "all job done executing" << endl;
+
+  return 0;
 }
