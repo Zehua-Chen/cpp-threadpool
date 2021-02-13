@@ -1,11 +1,14 @@
 #include <iostream>
-
+#include <future>
+#include <chrono>
 #include "threadpool/threadpool.h"
 
 using namespace threadpool;
 using std::cout;
 using std::endl;
 using std::unique_ptr;
+using std::future;
+using namespace std::literals::chrono_literals;
 
 std::mutex cout_m;
 
@@ -74,8 +77,14 @@ void test() {
 }
 
 int main() {
-  test();
-  cout << "all job done executing" << endl;
+  future<void> test_future = std::async(test);
+
+  if (test_future.wait_for(2s) == std::future_status::timeout) {
+    cout << "timed out!" << endl;
+    return -1;
+  }
+
+  cout << "all job done executing!" << endl;
 
   return 0;
 }
