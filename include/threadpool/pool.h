@@ -5,7 +5,6 @@
 #include <optional>
 #include <queue>
 #include <thread>
-#include <atomic>
 
 #include "threadpool/job.h"
 

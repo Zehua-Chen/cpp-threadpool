@@ -1,14 +1,15 @@
-#include <iostream>
-#include <future>
 #include <chrono>
+#include <future>
+#include <iostream>
+
 #include "threadpool/threadpool.h"
 
 using namespace threadpool;
 using std::cout;
 using std::endl;
-using std::unique_ptr;
-using std::shared_ptr, std::make_shared;
 using std::future;
+using std::shared_ptr, std::make_shared;
+using std::unique_ptr;
 using namespace std::literals::chrono_literals;
 
 std::mutex cout_m;
