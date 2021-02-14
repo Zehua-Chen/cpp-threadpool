@@ -16,13 +16,13 @@ std::mutex cout_m;
 
 void test_empty() {
   cout << endl << "test empty" << endl;
-  shared_ptr<thread_pool> pool = make_shared<thread_pool>(3);
+  auto pool = make_shared<default_thread_pool>(3);
 }
 
 void test_push_one() {
   cout << endl << "test push one" << endl;
-  shared_ptr<thread_pool> pool = make_shared<thread_pool>(3);
-  shared_ptr<job_group> group = make_shared<job_group>();
+  auto pool = make_shared<default_thread_pool>(3);
+  auto group = make_shared<job_group>();
 
   group->enter();
 
@@ -38,8 +38,8 @@ void test_push_one() {
 void test_push_complex() {
   cout << endl << "test push complex" << endl;
 
-  shared_ptr<thread_pool> pool = make_shared<thread_pool>(3);
-  shared_ptr<job_group> group = make_shared<job_group>();
+  auto pool = make_shared<default_thread_pool>(3);
+  auto group = make_shared<job_group>();
 
   for (size_t i = 0; i < 100; i++) {
     group->enter();

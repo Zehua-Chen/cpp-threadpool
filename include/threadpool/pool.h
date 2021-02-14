@@ -12,15 +12,15 @@ namespace threadpool {
 /**
  * @brief A threadpool object
  */
-class thread_pool {
+class default_thread_pool {
  public:
   /**
    * @brief Create a thread pool
    *
    * @param threads how many threads to use
    */
-  thread_pool(size_t threads);
-  ~thread_pool();
+  default_thread_pool(size_t threads);
+  ~default_thread_pool();
 
   /**
    * @brief Push a new job onto the thread pool
@@ -36,7 +36,7 @@ class thread_pool {
    * @returns Returns a thread pool with # of threads =
    * `std::thread::hardware_concurrency() - 1`
    */
-  static thread_pool *shared();
+  static default_thread_pool *shared();
 
  private:
   /**
@@ -82,12 +82,12 @@ class thread_pool {
 
   class worker {
    private:
-    thread_pool *pool_;
+    default_thread_pool *pool_;
     std::thread thread_;
 
    public:
     worker(worker &&other);
-    worker(thread_pool *pool);
+    worker(default_thread_pool *pool);
 
     ~worker();
   };
@@ -101,6 +101,6 @@ class thread_pool {
   job_queue queue_;
   std::vector<worker> workers_;
 
-  static std::unique_ptr<thread_pool> default_pool_;
+  static std::unique_ptr<default_thread_pool> default_pool_;
 };
 }  // namespace threadpool
