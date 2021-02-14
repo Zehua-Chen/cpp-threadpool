@@ -35,7 +35,7 @@ int main() {
 ## Development
 
 ```
-cmake -DCPP_THREADPOOL_DEV=ON ..
+cmake -DTHREADPOOL_DEV=ON ..
 ```
 
-Defining CPP_THREADPOOL_DEV would enable testing
+Defining `THREADPOOL_DEV` would enable testing
