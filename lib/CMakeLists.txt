@@ -1,6 +1,7 @@
 add_library(
   threadpool
   default_thread_pool.cc
+  platform_thread_pool.cc
   job.cc
   job_group.cc)
 

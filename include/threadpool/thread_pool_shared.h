@@ -1,5 +1,7 @@
 #pragma once
 
+#include "threadpool/job.h"
+
 namespace threadpool {
 /**
  * Standard thread_pool interface

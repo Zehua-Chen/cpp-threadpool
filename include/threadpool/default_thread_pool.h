@@ -7,7 +7,7 @@
 #include <thread>
 
 #include "threadpool/job.h"
-#include "threadpool/thread_pool.h"
+#include "threadpool/thread_pool_shared.h"
 
 namespace threadpool {
 /**
