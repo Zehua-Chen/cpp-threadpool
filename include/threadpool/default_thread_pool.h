@@ -7,12 +7,13 @@
 #include <thread>
 
 #include "threadpool/job.h"
+#include "threadpool/thread_pool.h"
 
 namespace threadpool {
 /**
- * @brief A threadpool object
+ * @brief A default object
  */
-class default_thread_pool {
+class default_thread_pool : public thread_pool {
  public:
   /**
    * @brief Create a thread pool
@@ -28,7 +29,7 @@ class default_thread_pool {
    * @param job a job to be run. Note that the ownership of the job will be
    * trasfered over to the thread pool. The job can be null
    */
-  void push(std::unique_ptr<job> &&job);
+  void push(std::unique_ptr<job> &&job) override;
 
   /**
    * @brief Get the default thread pool
