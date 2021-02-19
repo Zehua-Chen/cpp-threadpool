@@ -63,7 +63,8 @@ default_thread_pool::worker::worker(default_thread_pool *pool) : pool_{pool} {
 
 default_thread_pool::worker::~worker() { thread_.join(); }
 
-default_thread_pool::default_thread_pool(size_t threads) : threads_(threads), open_(true) {
+default_thread_pool::default_thread_pool(size_t threads)
+    : threads_(threads), open_(true) {
   workers_.reserve(threads);
 
   for (size_t i = 0; i < threads; ++i) {
@@ -76,13 +77,16 @@ default_thread_pool::~default_thread_pool() {
   queue_.close();
 }
 
-void default_thread_pool::push(unique_ptr<job> &&job) { queue_.push(std::move(job)); }
+void default_thread_pool::push(unique_ptr<job> &&job) {
+  queue_.push(std::move(job));
+}
 
 default_thread_pool *default_thread_pool::shared() {
   if (!default_pool_) {
     unsigned int concurrency = std::thread::hardware_concurrency();
 
-    default_pool_ = unique_ptr<default_thread_pool>{new default_thread_pool{concurrency - 1}};
+    default_pool_ = unique_ptr<default_thread_pool>{
+        new default_thread_pool{concurrency - 1}};
   }
 
   return default_pool_.get();
